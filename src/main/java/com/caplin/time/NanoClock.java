@@ -4,6 +4,9 @@
 package com.caplin.time;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -45,16 +48,28 @@ public class NanoClock extends Clock {
             throw new FileNotFoundException("File " + temp.getAbsolutePath() + " does not exist.");
         }
 
-        // Copy the distributable from the jar to the temporary file.
-        try (InputStream inputStream = NanoClock.class.getResourceAsStream(String.format("/native/%s%s", nativeLibrary, extension));
-             OutputStream outputStream = new FileOutputStream(temp)) {
-            if (inputStream == null) {
-                throw new FileNotFoundException(String.format("Executable file 'native/nanotime%s' was not found inside JAR.", extension));
+        InputStream nativeLib = null;
+        String nanoClockLibPath = System.getProperty("libnanotime_jni_path", "");
+        if (!nanoClockLibPath.isEmpty()) {
+            Path libPath = Paths.get(nanoClockLibPath);
+            if (Files.exists(libPath) && Files.isRegularFile(libPath)) {
+                nativeLib = new FileInputStream(libPath.toAbsolutePath().toString());
             }
+        }
 
+        if (nativeLib == null) {
+            NanoClock.class.getResourceAsStream(String.format("/native/%s%s", nativeLibrary, extension));
+        }
+
+        if (nativeLib == null) {
+            throw new FileNotFoundException(String.format("Executable file 'native/nanotime%s' was not found inside JAR.", extension));
+        }
+
+        // Copy the distributable from the jar to the temporary file.
+        try (OutputStream outputStream = new FileOutputStream(temp)) {
             byte[] buffer = new byte[1024];
             int readBytes;
-            while ((readBytes = inputStream.read(buffer)) != -1) {
+            while ((readBytes = nativeLib.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, readBytes);
             }
         } catch (Throwable e) {
