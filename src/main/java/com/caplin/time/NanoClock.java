@@ -7,6 +7,7 @@ import java.io.*;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A clock providing access to system time with nanosecond precision.
@@ -116,6 +117,12 @@ public class NanoClock extends Clock {
         // Decode the long, the first 32 bits are the seconds since epoch,
         // and the other 32 bits are the nanoseconds.
         return Instant.ofEpochSecond( time >> 32, time & 0xFFFFFFFFL);
+    }
+
+    // return nanoseconds since epoch
+    public long nanoTime() {
+        long time = clock_gettime();
+        return TimeUnit.SECONDS.toNanos(time >> 32) + (time & 0xFFFFFFFFL);
     }
 
     @Override
