@@ -58,7 +58,7 @@ public class NanoClock extends Clock {
         }
 
         if (nativeLib == null) {
-            NanoClock.class.getResourceAsStream(String.format("/native/%s%s", nativeLibrary, extension));
+            nativeLib = NanoClock.class.getResourceAsStream(String.format("/native/%s%s", nativeLibrary, extension));
         }
 
         if (nativeLib == null) {
